@@ -1,0 +1,103 @@
+package config;
+
+import com.google.gson.Gson;
+import dao.Dao;
+import dao.JdbcCardDao;
+import domain.Card;
+import dto.ClientRequest;
+import dto.ServerResponse;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.List;
+import java.util.Optional;
+
+public class ClientHandler implements Runnable {
+    private final Socket clientSocket;
+    private final Dao<Card, Integer> cardDao;
+    private final Gson gson;
+
+    public ClientHandler(Socket socket) {
+        this.clientSocket = socket;
+        this.cardDao = new JdbcCardDao(); // apply dao
+        this.gson = new Gson();
+    }
+
+    @Override
+    public void run() {
+        System.out.println("Client connected: " + clientSocket.getRemoteSocketAddress());
+        try (
+            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)
+        ) {
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                // JSON request from client
+                ClientRequest request = gson.fromJson(inputLine, ClientRequest.class);
+                
+                if ("DISCONNECT".equalsIgnoreCase(request.getRequestType())) {
+                    System.out.println("Client disconnected cleanly: " + clientSocket.getRemoteSocketAddress());
+                    ServerResponse<String> response = ServerResponse.success("Disconnected successfully", null);
+                    out.println(gson.toJson(response));
+                    break; // (F17)
+                }
+
+                // working on the request
+                String responseJson = handleRequest(request);
+                out.println(responseJson);
+            }
+        } catch (Exception e) {
+            System.err.println("Error handling client " + clientSocket.getRemoteSocketAddress() + ": " + e.getMessage());
+        } finally {
+            try {
+                clientSocket.close();
+            } catch (Exception ignored) {}
+        }
+    }
+
+    private String handleRequest(ClientRequest request) {
+        try {
+            switch (request.getRequestType().toUpperCase()) {
+                case "GET_ALL":
+                    List<Card> cards = cardDao.getAll();
+                    return gson.toJson(ServerResponse.success("All cards retrieved", cards));
+
+                case "GET_BY_ID":
+                    int id = Integer.parseInt(request.getPayload());
+                    Optional<Card> card = cardDao.getById(id);
+                    if (card.isPresent()) {
+                        return gson.toJson(ServerResponse.success("Card found", card.get()));
+                    } else {
+                        return gson.toJson(ServerResponse.error("Card not found with ID: " + id));
+                    }
+
+                case "ADD":
+                    Card newCard = gson.fromJson(request.getPayload(), Card.class);
+                    Card savedCard = cardDao.insert(newCard);
+                    return gson.toJson(ServerResponse.success("Card created", savedCard));
+
+                case "UPDATE":
+                    Card cardToUpdate = gson.fromJson(request.getPayload(), Card.class);
+                    Card updatedCard = cardDao.update(cardToUpdate.getCardId(), cardToUpdate);
+                    return gson.toJson(ServerResponse.success("Card updated", updatedCard));
+
+                case "DELETE":
+                    int deleteId = Integer.parseInt(request.getPayload());
+                    boolean deleted = cardDao.deleteById(deleteId);
+                    if (deleted) {
+                        return gson.toJson(ServerResponse.success("Card deleted", true));
+                    } else {
+                        return gson.toJson(ServerResponse.error("Failed to delete card with ID: " + deleteId));
+                    }
+
+                default:
+                    return gson.toJson(ServerResponse.error("Unknown request type: " + request.getRequestType()));
+            }
+        } catch (Exception e) {
+            // (F13)
+            return gson.toJson(ServerResponse.error("Server error: " + e.getMessage()));
+        }
+    }
+}
