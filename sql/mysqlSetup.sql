@@ -69,6 +69,17 @@ INSERT INTO cards (card_name, character_type, domain, madness_level, attack, def
 ('Mad Alice', 'Hero', 'Vale of Tears', 85, 75, 60, 'Vorpal Blade Strike', 'Legendary'),
 ('Queen of Hearts', 'Villain', 'Queensland', 95, 90, 70, 'Off With Their Heads', 'Epic'),
 ('Cheshire Cat', 'Creature', 'Wonderland', 70, 55, 45, 'Teleport and Taunt', 'Rare');
+INSERT INTO cards (card_name, character_type, domain, madness_level, attack, defense, ability, rarity) VALUES
+('Mad Alice', 'Hero', 'Vale of Tears', 85, 75, 60, 'Vorpal Blade Strike', 'Legendary'),
+('Queen of Hearts', 'Villain', 'Queensland', 95, 90, 70, 'Off With Their Heads', 'Epic'),
+('Cheshire Cat', 'Creature', 'Wonderland', 70, 55, 45, 'Teleport and Taunt', 'Rare'),
+('Mad Hatter', 'NPC', 'Hatter Domain', 80, 65, 50, 'Clockwork Explosion', 'Epic'),
+('Jabberwock', 'Monster', 'Fire Domain', 90, 85, 80, 'Inferno Breath', 'Legendary'),
+('March Hare', 'Creature', 'Hatter Domain', 60, 45, 40, 'Teapot Cannon', 'Common'),
+('Dormouse', 'Creature', 'Hatter Domain', 40, 30, 35, 'Sleep Powder', 'Common'),
+('Caterpillar', 'NPC', 'Forest Domain', 50, 20, 75, 'Smoke Shield', 'Rare'),
+('White Rabbit', 'NPC', 'Vale of Tears', 30, 25, 30, 'Time Freeze', 'Rare'),
+('Executioner', 'Monster', 'Queensland', 88, 80, 65, 'Scythe Cleave', 'Epic');
 
 INSERT INTO players (name, nationality, best_achievement, current_ranking, madness_points) VALUES
 ('Liubov Lykhosherst', 'Ukraine', '1st Place - Wonderland Cup 2025', 12, 2450),
